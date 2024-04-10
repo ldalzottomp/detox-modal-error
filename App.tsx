@@ -1,118 +1,131 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as React from 'react';
+import { Button, Modal, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+type ReactModalProps = {
+    showNavigationModal: () => void;
+};
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const ReactModal = ({ showNavigationModal }: ReactModalProps) => {
+    const [modalVisible, setModalVisible] = React.useState(true);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+    const DismissButton = () => {
+        return (
+            <Button
+                title="Show navigation modal"
+                testID="detox-show-navigation-modal-button"
+                onPress={() => {
+                    // Will trigger <Modal/>.onDismiss callback
+                    setModalVisible(false);
+                }}
+            />
+        );
+    };
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+    return (
+        <Modal animationType="fade" visible={modalVisible} onDismiss={showNavigationModal}>
+            <DismissButton />
+        </Modal>
+    );
+};
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+type MainScreenProps = {
+    navigationProps: any;
+};
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+const MainScreen = ({ navigationProps }: MainScreenProps) => {
+    const viewStyle: StyleProp<ViewStyle> = {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+    };
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+    const [reactModalVisible, setReactModalVisible] = React.useState(false);
+
+    const RenderReactModal = () => {
+        return (
+            <ReactModal
+                showNavigationModal={() => {
+                    setReactModalVisible(false);
+                    navigationProps.navigation.navigate('ModalScreen');
+                }}
+            />
+        );
+    };
+
+    return (
+        <View style={viewStyle}>
+            <Button
+                title="Show React Modal"
+                testID="detox-show-react-modal-button"
+                onPress={() => {
+                    setReactModalVisible(true);
+                }}
+            />
+            {reactModalVisible && <RenderReactModal />}
         </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+    );
+};
+
+type ModalScreenProps = {
+    navigationProps: any;
+};
+
+const ModalScreen = ({ navigationProps }: ModalScreenProps) => {
+    const viewStyle: StyleProp<ViewStyle> = {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+    };
+
+    const DismissButton = () => {
+        return (
+            <Button
+                title="Hide navigation modal screen"
+                testID="detox-hide-navigation-modal-button"
+                onPress={() => {
+                    navigationProps.navigation.goBack();
+                }}
+            />
+        );
+    };
+
+    return (
+        <View style={viewStyle}>
+            <DismissButton />
+        </View>
+    );
+};
+
+const RootNavigator = () => {
+    const Stack = createNativeStackNavigator();
+    return (
+        <Stack.Navigator initlaRouteName="MainScreen">
+            <Stack.Screen name="MainScreen">
+                {(navigationProps: any) => {
+                    return <MainScreen navigationProps={navigationProps} />;
+                }}
+            </Stack.Screen>
+            <Stack.Group screenOptions={{ presentation: 'modal' }}>
+                <Stack.Screen name="ModalScreen">
+                    {(navigationProps: any) => {
+                        return <ModalScreen navigationProps={navigationProps} />;
+                    }}
+                </Stack.Screen>
+            </Stack.Group>
+        </Stack.Navigator>
+    );
+};
+
+export default function App() {
+    return (
+        <NavigationContainer>
+            <RootNavigator />
+        </NavigationContainer>
+    );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
-export default App;
